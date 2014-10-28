@@ -2,7 +2,7 @@ package nio
 
 import "io"
 
-func NewReader(reader io.Reader) io.Reader {
+func NewReader(reader io.Reader) io.ReadCloser {
 	r, w := Pipe()
 	go func() {
 		io.Copy(w, reader)
@@ -11,7 +11,7 @@ func NewReader(reader io.Reader) io.Reader {
 	return r
 }
 
-func NewReadCloser(reader io.ReadCloser) io.Reader {
+func NewReadCloser(reader io.ReadCloser) io.ReadCloser {
 	r, w := Pipe()
 	go func() {
 		io.Copy(w, reader)
