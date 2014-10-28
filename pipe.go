@@ -2,6 +2,7 @@ package nio
 
 import (
 	"io"
+	"lib/buffer"
 	"lib/channel"
 )
 
@@ -9,17 +10,18 @@ func Pipe() (io.ReadCloser, io.WriteCloser) {
 	inReader, inWriter := io.Pipe()
 	outReader, outWriter := io.Pipe()
 
-	input := make(chan []byte)
-	output := make(chan []byte)
+	input := make(chan interface{})
+	output := make(chan interface{})
 
-	go channel.Chan(input, output)
+	pending := buffer.NewBufferQueue(buffer.NewUnboundedBuffer(32*1024, 100*1024*1024))
+	go channel.ChanQueue(input, output, pending)
 	go inFeed(inReader, input)
 	go outFeed(outWriter, output)
 
 	return outReader, inWriter
 }
 
-func inFeed(r io.Reader, in chan<- []byte) {
+func inFeed(r io.Reader, in chan<- interface{}) {
 	for {
 		data := make([]byte, 32*1024)
 		if n, err := r.Read(data); err == nil {
@@ -31,11 +33,12 @@ func inFeed(r io.Reader, in chan<- []byte) {
 	}
 }
 
-func outFeed(w io.WriteCloser, out <-chan []byte) {
+func outFeed(w io.WriteCloser, out <-chan interface{}) {
 	for output := range out {
-		for len(output) > 0 {
-			n, _ := w.Write(output)
-			output = output[n:]
+		data := output.([]byte)
+		for len(data) > 0 {
+			n, _ := w.Write(data)
+			data = data[n:]
 		}
 
 	}
