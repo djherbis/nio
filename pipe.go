@@ -8,13 +8,13 @@ import (
 
 type sdReader struct {
 	io.ReadCloser
-	out   io.ReadCloser
+	in    io.ReadCloser
 	chout chan interface{}
 }
 
 func (r *sdReader) Close() error {
+	r.in.Close()
 	r.ReadCloser.Close()
-	r.out.Close()
 	for _ = range r.chout {
 	}
 	return nil
@@ -33,8 +33,8 @@ func Pipe() (io.ReadCloser, io.WriteCloser) {
 	go outFeed(outWriter, output)
 
 	return &sdReader{
-		ReadCloser: inReader,
-		out:        outReader,
+		ReadCloser: outReader,
+		in:         inReader,
 		chout:      output,
 	}, inWriter
 }
