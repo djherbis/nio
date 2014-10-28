@@ -10,6 +10,9 @@ import (
 func TestPipe(t *testing.T) {
 	r, w := Pipe()
 
+	r = NewReadCloser(r)
+	w = NewWriteCloser(w)
+
 	go func() {
 		for i := 0; i < 10; i++ {
 			if _, err := w.Write([]byte(fmt.Sprintf("%d", i))); err != nil {
