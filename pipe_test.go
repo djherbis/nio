@@ -12,7 +12,10 @@ func TestPipe(t *testing.T) {
 
 	go func() {
 		for i := 0; i < 10; i++ {
-			w.Write([]byte(fmt.Sprintf("%d", i)))
+			if _, err := w.Write([]byte(fmt.Sprintf("%d", i))); err != nil {
+				t.Error(err.Error())
+				return
+			}
 		}
 		w.Close()
 	}()
