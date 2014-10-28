@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"testing"
-	"time"
 )
 
 func TestPipe(t *testing.T) {
@@ -17,8 +16,6 @@ func TestPipe(t *testing.T) {
 		}
 		w.Close()
 	}()
-	<-time.After(1 * time.Second)
-	r.Close()
 
 	data, err := ioutil.ReadAll(r)
 	if err != nil {

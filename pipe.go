@@ -27,7 +27,7 @@ func Pipe() (io.ReadCloser, io.WriteCloser) {
 	input := make(chan interface{})
 	output := make(chan interface{})
 
-	pending := buffer.NewBufferQueue(buffer.NewFile(1024))
+	pending := buffer.NewBufferQueue(buffer.NewUnboundedBuffer(32*1024, 100*1024*1024))
 	go channel.ChanQueue(input, output, pending)
 	go inFeed(inReader, input)
 	go outFeed(outWriter, output)
