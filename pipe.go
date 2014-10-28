@@ -19,7 +19,7 @@ func Pipe() (io.ReadCloser, io.WriteCloser) {
 	return outReader, inWriter
 }
 
-func inFeed(r io.ReadCloser, in chan<- []byte) {
+func inFeed(r io.Reader, in chan<- []byte) {
 	for {
 		data := make([]byte, 32*1024)
 		if n, err := r.Read(data); err == nil {
