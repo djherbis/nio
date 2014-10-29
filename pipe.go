@@ -2,8 +2,9 @@ package nio
 
 import (
 	"io"
-	"lib/buffer"
-	"lib/channel"
+
+	"github.com/djherbis/buffer"
+	"github.com/djherbis/channel"
 )
 
 type sdReader struct {
