@@ -36,7 +36,7 @@ func Pipe() (io.ReadCloser, io.WriteCloser) {
 	}, inWriter
 }
 
-func Copy(dst io.WriteCloser, src io.ReadCloser) (n int64, err error) {
+func Copy(dst io.Writer, src io.Reader) (n int64, err error) {
 
 	input := make(chan interface{})
 	output := make(chan interface{})
@@ -61,7 +61,7 @@ func inFeed(r io.Reader, in chan<- interface{}) {
 	}
 }
 
-func outFeed(w io.WriteCloser, out <-chan interface{}) (n int64, err error) {
+func outFeed(w io.Writer, out <-chan interface{}) (n int64, err error) {
 	for output := range out {
 		data := output.([]byte)
 		for len(data) > 0 {

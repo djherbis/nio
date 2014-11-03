@@ -3,18 +3,18 @@ package nio
 import "io"
 
 func NewReader(reader io.Reader) io.ReadCloser {
-	r, w := Pipe()
+	r, w := io.Pipe()
 	go func() {
-		io.Copy(w, reader)
+		Copy(w, reader)
 		w.Close()
 	}()
 	return r
 }
 
 func NewReadCloser(reader io.ReadCloser) io.ReadCloser {
-	r, w := Pipe()
+	r, w := io.Pipe()
 	go func() {
-		io.Copy(w, reader)
+		Copy(w, reader)
 		w.Close()
 		reader.Close()
 	}()
@@ -22,15 +22,15 @@ func NewReadCloser(reader io.ReadCloser) io.ReadCloser {
 }
 
 func NewWriter(writer io.Writer) io.WriteCloser {
-	r, w := Pipe()
-	go io.Copy(writer, r)
+	r, w := io.Pipe()
+	go Copy(writer, r)
 	return w
 }
 
 func NewWriteCloser(writer io.WriteCloser) io.WriteCloser {
-	r, w := Pipe()
+	r, w := io.Pipe()
 	go func() {
-		io.Copy(writer, r)
+		Copy(writer, r)
 		writer.Close()
 	}()
 	return w
