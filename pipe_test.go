@@ -28,6 +28,6 @@ func TestPipe(t *testing.T) {
 		t.Error(err.Error())
 	}
 	if !bytes.Equal(data, []byte("0123456789")) {
-		t.Error("Not equal!")
+		t.Error("Not equal! " + string(data))
 	}
 }
