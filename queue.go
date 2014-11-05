@@ -41,7 +41,7 @@ func (q *BufferQueue) Peek() (b interface{}) {
 
 func (q *BufferQueue) Pop() (b interface{}) {
 	q.top.ok <- empty
-	q.Buffer.FastForward(len(q.top.data))
+	q.Buffer.FFwd(len(q.top.data))
 	return q.top
 }
 
