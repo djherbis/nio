@@ -69,7 +69,7 @@ func outFeed(w io.Writer, out <-chan interface{}) (n int64, err error) {
 	for output := range out {
 		p := output.(*Packet)
 		x := copy(data, p.data)
-		p.ok <- empty
+		<-p.ok
 		var m int
 		for len(data[m:x]) > 0 {
 			m, err = w.Write(data[m:x])

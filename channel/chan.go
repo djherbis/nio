@@ -36,6 +36,7 @@ recv:
 	}
 
 	for !queue.Empty(pending) {
-		next <- pending.Pop()
+		next <- pending.Peek()
+		pending.Pop()
 	}
 }
