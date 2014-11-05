@@ -50,10 +50,13 @@ func Copy(dst io.Writer, src io.Reader) (n int64, err error) {
 }
 
 func inFeed(r io.Reader, in chan<- interface{}) {
+	data := make([]byte, 32*1024)
+	p := NewPacket()
 	for {
-		data := make([]byte, 32*1024)
 		if n, err := r.Read(data); err == nil {
-			in <- data[:n]
+			p.data = data[:n]
+			in <- p
+			<-p.ok
 		} else {
 			close(in)
 			return
@@ -62,12 +65,15 @@ func inFeed(r io.Reader, in chan<- interface{}) {
 }
 
 func outFeed(w io.Writer, out <-chan interface{}) (n int64, err error) {
+	data := make([]byte, 32*1024)
 	for output := range out {
-		data := output.([]byte)
-		for len(data) > 0 {
-			m, err := w.Write(data)
+		p := output.(*Packet)
+		x := copy(data, p.data)
+		p.ok <- empty
+		var m int
+		for len(data[m:x]) > 0 {
+			m, err = w.Write(data[m:x])
 			n += int64(m)
-			data = data[m:]
 			if err != nil {
 				return n, err
 			}

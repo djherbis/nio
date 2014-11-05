@@ -2,46 +2,51 @@ package nio
 
 import "github.com/djherbis/buffer"
 
+var empty struct{}
+
+type Packet struct {
+	data []byte
+	ok   chan struct{}
+}
+
+func NewPacket() *Packet {
+	return &Packet{
+		ok: make(chan struct{}),
+	}
+}
+
 type BufferQueue struct {
-	top []byte
+	top  *Packet
+	data []byte
 	buffer.Buffer
 }
 
 func NewBufferQueue(buf buffer.Buffer) *BufferQueue {
 	return &BufferQueue{
+		top:    NewPacket(),
+		data:   make([]byte, 32*1024),
 		Buffer: buf,
 	}
 }
 
 func (q *BufferQueue) Len() (n int64) {
-	if q.top != nil {
-		n += int64(len(q.top))
-	}
-	n += q.Buffer.Len()
-	return n
+	return q.Buffer.Len()
 }
 
 func (q *BufferQueue) Peek() (b interface{}) {
-	if q.top != nil {
-		return q.top
-	} else {
-		q.top = q.Pop().([]byte)
-		return q.top
-	}
-}
-
-func (q *BufferQueue) Push(b interface{}) {
-	q.Write(b.([]byte))
+	n, _ := q.Buffer.ReadAt(q.data, 0)
+	q.top.data = q.data[:n]
+	return q.top
 }
 
 func (q *BufferQueue) Pop() (b interface{}) {
-	if q.top != nil {
-		b = q.top
-		q.top = nil
-	} else {
-		data := make([]byte, 32*1024)
-		n, _ := q.Read(data)
-		b = data[:n]
-	}
-	return b
+	<-q.top.ok
+	q.Buffer.FastForward(len(q.top.data))
+	return q.top
+}
+
+func (q *BufferQueue) Push(b interface{}) {
+	p := b.(*Packet)
+	q.Write(p.data)
+	p.ok <- empty
 }
