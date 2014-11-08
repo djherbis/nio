@@ -18,7 +18,7 @@ func NewReader(reader io.Reader, buf ...buffer.Buffer) io.ReadCloser {
 func NewReadCloser(reader io.ReadCloser, buf ...buffer.Buffer) io.ReadCloser {
 	r, w := io.Pipe()
 	go func() {
-		Copy(w, reader)
+		Copy(w, reader, buf...)
 		w.Close()
 		reader.Close()
 	}()
