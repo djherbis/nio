@@ -21,12 +21,12 @@ func (r *sdReader) Close() error {
 	return nil
 }
 
-func Pipe() (io.ReadCloser, io.WriteCloser) {
+func Pipe(buf ...buffer.Buffer) (io.ReadCloser, io.WriteCloser) {
 	inReader, inWriter := io.Pipe()
 	outReader, outWriter := io.Pipe()
 
 	go func() {
-		Copy(outWriter, inReader)
+		Copy(outWriter, inReader, buf...)
 		outWriter.Close()
 	}()
 
@@ -36,12 +36,16 @@ func Pipe() (io.ReadCloser, io.WriteCloser) {
 	}, inWriter
 }
 
-func Copy(dst io.Writer, src io.Reader) (n int64, err error) {
+func Copy(dst io.Writer, src io.Reader, buf ...buffer.Buffer) (n int64, err error) {
 
 	input := make(chan interface{})
 	output := make(chan interface{})
 
-	pending := NewBufferQueue(buffer.NewUnboundedBuffer(32*1024, 100*1024*1024))
+	if len(buf) == 0 {
+		buf = append(buf, buffer.NewUnboundedBuffer(32*1024, 100*1024*1024))
+	}
+
+	pending := NewBufferQueue(buffer.NewMulti(buf...))
 
 	go channel.ChanQueue(input, output, pending)
 	go inFeed(src, input)
