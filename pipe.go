@@ -8,15 +8,12 @@ import (
 
 type sdReader struct {
 	io.ReadCloser
-	in    io.ReadCloser
-	chout chan interface{}
+	in io.ReadCloser
 }
 
 func (r *sdReader) Close() error {
 	r.in.Close()
 	r.ReadCloser.Close()
-	for _ = range r.chout {
-	}
 	return nil
 }
 
