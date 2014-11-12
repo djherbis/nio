@@ -7,4 +7,5 @@
 
 ### How do I get set up? ###
 
-* You'll also need https://github.com/djherbis/buffer
+go get https://github.com/djherbis/buffer
+go get https://github.com/djherbis/nio
