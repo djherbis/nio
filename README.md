@@ -7,6 +7,6 @@
 
 ### How do I get set up? ###
 
-go get https://github.com/djherbis/buffer
+go get github.com/djherbis/buffer
 
-go get https://github.com/djherbis/nio
+go get github.com/djherbis/nio
