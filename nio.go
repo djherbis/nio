@@ -53,7 +53,7 @@ func Copy(dst io.Writer, src io.Reader, buf ...buffer.Buffer) (n int64, err erro
 	if len(buf) == 0 {
 		buffer := pool.Get().(buffer.Buffer)
 		defer pool.Put(buffer)
-		buffer.Reset()
+		defer buffer.Reset()
 		buf = append(buf, buffer)
 	}
 
