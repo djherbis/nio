@@ -3,6 +3,7 @@ package nio
 
 import (
 	"io"
+	"sync"
 
 	"github.com/djherbis/buffer"
 )
@@ -35,6 +36,12 @@ func Pipe(buf ...buffer.Buffer) (io.ReadCloser, io.WriteCloser) {
 	}, inWriter
 }
 
+var pool *sync.Pool = &sync.Pool{
+	New: func() interface{} {
+		return buffer.NewUnboundedBuffer(32*1024, 100*1024*1024)
+	},
+}
+
 // Copy copies from src to dst until either EOF is reached on src or an error occurs.
 // It returns the number of bytes copied, and any any errors while writing to dst.
 // It uses a buffer.Buffer which reads from the passed src even while dst.Write is blocking.
@@ -44,7 +51,10 @@ func Pipe(buf ...buffer.Buffer) (io.ReadCloser, io.WriteCloser) {
 func Copy(dst io.Writer, src io.Reader, buf ...buffer.Buffer) (n int64, err error) {
 
 	if len(buf) == 0 {
-		buf = append(buf, buffer.NewUnboundedBuffer(32*1024, 100*1024*1024))
+		buffer := pool.Get().(buffer.Buffer)
+		defer pool.Put(buffer)
+		buffer.Reset()
+		buf = append(buf, buffer)
 	}
 
 	pending := buffer.NewSync(buffer.NewMulti(buf...))
