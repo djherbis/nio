@@ -50,7 +50,9 @@ func (r *syncBuf) Read(p []byte) (n int, err error) {
 		r.c.Wait()
 	}
 
-	return r.b.Read(p)
+	n, _ = r.b.Read(p)
+
+	return n, nil
 }
 
 func (w *syncBuf) Write(p []byte) (n int, err error) {
