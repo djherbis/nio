@@ -2,30 +2,18 @@ package nio
 
 import (
 	"bytes"
-	"crypto/rand"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"testing"
+
+	"github.com/djherbis/buffer"
 )
 
-func BenchmarkIOCopy(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		io.Copy(ioutil.Discard, io.LimitReader(rand.Reader, 10*1024*1024))
-	}
-}
-
-func BenchmarkNioCopy(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		Copy(ioutil.Discard, io.LimitReader(rand.Reader, 10*1024*1024))
-	}
-}
-
 func TestPipe(t *testing.T) {
-	r, w := Pipe()
+	r, w := Pipe(buffer.New(32 * 1024))
 
-	r = NewReadCloser(r)
-	w = NewWriteCloser(w)
+	r = NewReadCloser(r, buffer.New(32*1024))
+	w = NewWriteCloser(w, buffer.New(32*1024))
 
 	go func() {
 		for i := 0; i < 10; i++ {
