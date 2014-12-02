@@ -10,6 +10,7 @@ type syncBuf struct {
 	l    sync.Mutex
 	c    *sync.Cond
 	b    Buffer
+	err  error
 }
 
 func newSync(buf Buffer) *syncBuf {
@@ -21,9 +22,16 @@ func newSync(buf Buffer) *syncBuf {
 	return s
 }
 
-func (r *syncBuf) Close() {
+func (r *syncBuf) CloseWithErr(err error) {
+	r.err = err
+	r.Close()
+	return
+}
+
+func (r *syncBuf) Close() error {
 	close(r.done)
 	r.c.Signal()
+	return nil
 }
 
 func Empty(buf Buffer) bool {
@@ -42,6 +50,9 @@ func (r *syncBuf) Read(p []byte) (n int, err error) {
 	for Empty(r.b) {
 		select {
 		case <-r.done:
+			if r.err != nil {
+				return 0, r.err
+			}
 			return 0, io.EOF
 		default:
 		}

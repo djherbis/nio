@@ -40,8 +40,8 @@ func Copy(dst io.Writer, src io.Reader, buf Buffer) (n int64, err error) {
 	pending := newSync(buf)
 
 	go func() {
-		io.Copy(pending, src)
-		pending.Close()
+		_, err := io.Copy(pending, src)
+		pending.CloseWithErr(err)
 	}()
 
 	return io.Copy(dst, pending)
