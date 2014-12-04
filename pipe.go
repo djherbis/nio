@@ -260,7 +260,7 @@ func (w *PipeWriter) CloseWithError(err error) error {
 	return nil
 }
 
-// Pipe creates a synchronous in-memory pipe.
+// TimeoutPipe creates a synchronous in-memory pipe with optional Read/Write Deadlines.
 // It can be used to connect code expecting an io.Reader
 // with code expecting an io.Writer.
 // Reads on one end are matched with writes on the other,
