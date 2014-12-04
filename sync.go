@@ -102,7 +102,7 @@ func (w *bufpipe) Write(p []byte) (n int, err error) {
 
 	select {
 	case <-w.done:
-		return 0, w.err
+		return 0, io.ErrClosedPipe
 	default:
 	}
 
