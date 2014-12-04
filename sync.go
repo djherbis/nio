@@ -5,7 +5,51 @@ import (
 	"sync"
 )
 
-type syncBuf struct {
+type bufPipeReader struct {
+	*bufpipe
+}
+
+func (r *bufPipeReader) CloseWithErr(err error) error {
+	if err == nil {
+		err = io.ErrClosedPipe
+	}
+	r.bufpipe.l.Lock()
+	defer r.bufpipe.l.Unlock()
+	if r.bufpipe.err == nil {
+		r.bufpipe.err = err
+		close(r.bufpipe.done)
+		r.bufpipe.c.Signal()
+	}
+	return nil
+}
+
+func (r *bufPipeReader) Close() error {
+	return r.CloseWithErr(nil)
+}
+
+type bufPipeWriter struct {
+	*bufpipe
+}
+
+func (w *bufPipeWriter) CloseWithErr(err error) error {
+	if err == nil {
+		err = io.EOF
+	}
+	w.bufpipe.l.Lock()
+	defer w.bufpipe.l.Unlock()
+	if w.bufpipe.err == nil {
+		w.bufpipe.err = err
+		close(w.bufpipe.done)
+		w.bufpipe.c.Signal()
+	}
+	return nil
+}
+
+func (w *bufPipeWriter) Close() error {
+	return w.CloseWithErr(nil)
+}
+
+type bufpipe struct {
 	done chan struct{}
 	l    sync.Mutex
 	c    *sync.Cond
@@ -13,25 +57,13 @@ type syncBuf struct {
 	err  error
 }
 
-func newSync(buf Buffer) *syncBuf {
-	s := &syncBuf{
+func newBufferedPipe(buf Buffer) *bufpipe {
+	s := &bufpipe{
 		b:    buf,
 		done: make(chan struct{}),
 	}
 	s.c = sync.NewCond(&s.l)
 	return s
-}
-
-func (r *syncBuf) CloseWithErr(err error) {
-	r.err = err
-	r.Close()
-	return
-}
-
-func (r *syncBuf) Close() error {
-	close(r.done)
-	r.c.Signal()
-	return nil
 }
 
 func Empty(buf Buffer) bool {
@@ -42,7 +74,7 @@ func Gap(buf Buffer) int64 {
 	return buf.Cap() - buf.Len()
 }
 
-func (r *syncBuf) Read(p []byte) (n int, err error) {
+func (r *bufpipe) Read(p []byte) (n int, err error) {
 	r.l.Lock()
 	defer r.c.Signal()
 	defer r.l.Unlock()
@@ -50,10 +82,7 @@ func (r *syncBuf) Read(p []byte) (n int, err error) {
 	for Empty(r.b) {
 		select {
 		case <-r.done:
-			if r.err != nil {
-				return 0, r.err
-			}
-			return 0, io.EOF
+			return 0, r.err
 		default:
 		}
 
@@ -66,10 +95,16 @@ func (r *syncBuf) Read(p []byte) (n int, err error) {
 	return n, nil
 }
 
-func (w *syncBuf) Write(p []byte) (n int, err error) {
+func (w *bufpipe) Write(p []byte) (n int, err error) {
 	w.l.Lock()
 	defer w.c.Signal()
 	defer w.l.Unlock()
+
+	select {
+	case <-w.done:
+		return 0, w.err
+	default:
+	}
 
 	var m int
 

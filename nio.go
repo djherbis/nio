@@ -3,48 +3,28 @@ package nio
 
 import "io"
 
-type sdReader struct {
-	io.ReadCloser
-	in io.ReadCloser
-}
-
-func (r *sdReader) Close() error {
-	r.in.Close()
-	r.ReadCloser.Close()
-	return nil
-}
-
 type Buffer interface {
 	Len() int64
 	Cap() int64
 	io.ReadWriter
 }
 
-func Pipe(buf Buffer) (io.ReadCloser, io.WriteCloser) {
-	inReader, inWriter := io.Pipe()
-	outReader, outWriter := io.Pipe()
-
-	go func() {
-		Copy(outWriter, inReader, buf)
-		outWriter.Close()
-	}()
-
-	return &sdReader{
-		ReadCloser: outReader,
-		in:         inReader,
-	}, inWriter
+func Pipe(buf Buffer) (r io.ReadCloser, w io.WriteCloser) {
+	p := newBufferedPipe(buf)
+	r = &bufPipeReader{bufpipe: p}
+	w = &bufPipeWriter{bufpipe: p}
+	return r, w
 }
 
 func Copy(dst io.Writer, src io.Reader, buf Buffer) (n int64, err error) {
-
-	pending := newSync(buf)
+	r, w := Pipe(buf)
 
 	go func() {
-		_, err := io.Copy(pending, src)
-		pending.CloseWithErr(err)
+		_, err := io.Copy(w, src)
+		w.(*bufPipeWriter).CloseWithErr(err)
 	}()
 
-	return io.Copy(dst, pending)
+	return io.Copy(dst, r)
 }
 
 func NewReader(reader io.Reader, buf Buffer) io.ReadCloser {
