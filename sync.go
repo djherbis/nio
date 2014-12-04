@@ -48,6 +48,8 @@ func (w *bufPipeWriter) Close() error {
 }
 
 type bufpipe struct {
+	rl  sync.Mutex
+	wl  sync.Mutex
 	l   sync.Mutex
 	c   *sync.Cond
 	b   Buffer
@@ -71,6 +73,9 @@ func Gap(buf Buffer) int64 {
 }
 
 func (r *bufpipe) Read(p []byte) (n int, err error) {
+	r.rl.Lock()
+	defer r.rl.Unlock()
+
 	r.l.Lock()
 	defer r.c.Signal()
 	defer r.l.Unlock()
@@ -90,6 +95,9 @@ func (r *bufpipe) Read(p []byte) (n int, err error) {
 }
 
 func (w *bufpipe) Write(p []byte) (n int, err error) {
+	w.wl.Lock()
+	defer w.wl.Unlock()
+
 	w.l.Lock()
 	defer w.c.Signal()
 	defer w.l.Unlock()
