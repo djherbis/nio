@@ -17,7 +17,6 @@ func (r *bufPipeReader) CloseWithErr(err error) error {
 	defer r.bufpipe.l.Unlock()
 	if r.bufpipe.err == nil {
 		r.bufpipe.err = err
-		close(r.bufpipe.done)
 		r.bufpipe.c.Signal()
 	}
 	return nil
@@ -39,7 +38,6 @@ func (w *bufPipeWriter) CloseWithErr(err error) error {
 	defer w.bufpipe.l.Unlock()
 	if w.bufpipe.err == nil {
 		w.bufpipe.err = err
-		close(w.bufpipe.done)
 		w.bufpipe.c.Signal()
 	}
 	return nil
@@ -50,17 +48,15 @@ func (w *bufPipeWriter) Close() error {
 }
 
 type bufpipe struct {
-	done chan struct{}
-	l    sync.Mutex
-	c    *sync.Cond
-	b    Buffer
-	err  error
+	l   sync.Mutex
+	c   *sync.Cond
+	b   Buffer
+	err error
 }
 
 func newBufferedPipe(buf Buffer) *bufpipe {
 	s := &bufpipe{
-		b:    buf,
-		done: make(chan struct{}),
+		b: buf,
 	}
 	s.c = sync.NewCond(&s.l)
 	return s
@@ -80,10 +76,8 @@ func (r *bufpipe) Read(p []byte) (n int, err error) {
 	defer r.l.Unlock()
 
 	for Empty(r.b) {
-		select {
-		case <-r.done:
+		if r.err != nil {
 			return 0, r.err
-		default:
 		}
 
 		r.c.Signal()
@@ -100,10 +94,8 @@ func (w *bufpipe) Write(p []byte) (n int, err error) {
 	defer w.c.Signal()
 	defer w.l.Unlock()
 
-	select {
-	case <-w.done:
+	if w.err != nil {
 		return 0, io.ErrClosedPipe
-	default:
 	}
 
 	var m int
