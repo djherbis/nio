@@ -1,9 +1,6 @@
 package nio
 
-import (
-	"fmt"
-	"io"
-)
+import "io"
 
 type WriterFunc func([]byte) (int, error)
 
@@ -33,7 +30,6 @@ func (w *chunkWriter) Write(p []byte) (n int, err error) {
 
 		if n+w.chunk <= len(p) {
 			m, err = w.Writer.Write(p[n : n+w.chunk])
-			fmt.Println("\n|")
 		} else {
 			m, err = w.Writer.Write(p[n:])
 		}
