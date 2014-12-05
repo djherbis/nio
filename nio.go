@@ -30,6 +30,10 @@ func Pipe(buf Buffer) (r io.ReadCloser, w io.WriteCloser) {
 // write to the supplied Buffer. If dst implements ReaderFrom, it is used to read from
 // the supplied Buffer.
 func Copy(dst io.Writer, src io.Reader, buf Buffer) (n int64, err error) {
+	return io.Copy(dst, NewReader(src, buf))
+}
+
+func NewReader(src io.Reader, buf Buffer) io.ReadCloser {
 	r, w := Pipe(buf)
 
 	go func() {
@@ -37,47 +41,5 @@ func Copy(dst io.Writer, src io.Reader, buf Buffer) (n int64, err error) {
 		w.(*bufPipeWriter).CloseWithErr(err)
 	}()
 
-	return io.Copy(dst, r)
-}
-
-func NewReader(reader io.Reader, buf Buffer) io.ReadCloser {
-	r, w := Pipe(buf)
-
-	go func() {
-		io.Copy(w, reader)
-		w.Close()
-	}()
-
 	return r
-}
-
-func NewReadCloser(reader io.ReadCloser, buf Buffer) io.ReadCloser {
-	r, w := Pipe(buf)
-
-	go func() {
-		io.Copy(w, reader)
-		w.Close()
-		reader.Close()
-	}()
-
-	return r
-}
-
-func NewWriter(writer io.Writer, buf Buffer) io.WriteCloser {
-	r, w := Pipe(buf)
-
-	go io.Copy(writer, r)
-
-	return w
-}
-
-func NewWriteCloser(writer io.WriteCloser, buf Buffer) io.WriteCloser {
-	r, w := Pipe(buf)
-
-	go func() {
-		io.Copy(writer, r)
-		writer.Close()
-	}()
-
-	return w
 }
