@@ -41,35 +41,43 @@ func Copy(dst io.Writer, src io.Reader, buf Buffer) (n int64, err error) {
 }
 
 func NewReader(reader io.Reader, buf Buffer) io.ReadCloser {
-	r, w := io.Pipe()
+	r, w := Pipe(buf)
+
 	go func() {
-		Copy(w, reader, buf)
+		io.Copy(w, reader)
 		w.Close()
 	}()
+
 	return r
 }
 
 func NewReadCloser(reader io.ReadCloser, buf Buffer) io.ReadCloser {
-	r, w := io.Pipe()
+	r, w := Pipe(buf)
+
 	go func() {
-		Copy(w, reader, buf)
+		io.Copy(w, reader)
 		w.Close()
 		reader.Close()
 	}()
+
 	return r
 }
 
 func NewWriter(writer io.Writer, buf Buffer) io.WriteCloser {
-	r, w := io.Pipe()
-	go Copy(writer, r, buf)
+	r, w := Pipe(buf)
+
+	go io.Copy(writer, r)
+
 	return w
 }
 
 func NewWriteCloser(writer io.WriteCloser, buf Buffer) io.WriteCloser {
-	r, w := io.Pipe()
+	r, w := Pipe(buf)
+
 	go func() {
-		Copy(writer, r, buf)
+		io.Copy(writer, r)
 		writer.Close()
 	}()
+
 	return w
 }
