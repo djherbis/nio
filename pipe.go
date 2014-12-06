@@ -24,8 +24,6 @@ type pipeResult struct {
 	err error
 }
 
-var signal struct{}
-
 // A pipe is the shared pipe structure underlying PipeReader and PipeWriter.
 type pipe struct {
 	rl    sync.Mutex    // gates readers one at a time
@@ -48,7 +46,7 @@ func (p *pipe) readTimeout() {
 	if !p.rdt.IsZero() {
 		if p.rt == nil {
 			p.rt = time.AfterFunc(p.rdt.Sub(time.Now()), func() {
-				p.rtc <- signal
+				p.rtc <- struct{}{}
 				p.rwait.Signal()
 			})
 		} else {
@@ -104,7 +102,7 @@ func (p *pipe) writeTimeout() {
 	if !p.wdt.IsZero() {
 		if p.wt == nil {
 			p.wt = time.AfterFunc(p.wdt.Sub(time.Now()), func() {
-				p.wtc <- signal
+				p.wtc <- struct{}{}
 				p.wwait.Signal()
 			})
 		} else {
