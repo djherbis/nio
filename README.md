@@ -30,6 +30,9 @@ nio.Copy(w, r, buf) // Reads and Writes concurrently, buffering using buf.
 ```
 
 nio's Pipe method is a buffered version of io.Pipe
+The writer return once its data has been written to the Buffer.
+The reader returns with data off the Buffer.
+
 ```go
 import (
   "github.com/djherbis/buffer"
@@ -38,8 +41,6 @@ import (
 
 buf := buffer.New(32*1024) // 32KB In memory Buffer
 r, w := nio.Pipe(buf)
-The writer return once its data has been written to the Buffer.
-The reader returns with data off the Buffer.
 ```
 
 Installation
