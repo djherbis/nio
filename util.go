@@ -12,26 +12,14 @@ func (w WriterFunc) Close() error {
 	return nil
 }
 
-type chunkWriter struct {
-	io.Writer
-	chunk int
-}
-
-func ChunkWriter(w io.Writer, chunk int) io.Writer {
-	return &chunkWriter{
-		Writer: w,
-		chunk:  chunk,
-	}
-}
-
-func (w *chunkWriter) Write(p []byte) (n int, err error) {
+func WriteInChunks(w io.Writer, p []byte, chunk int) (n int, err error) {
 	var m int
 	for len(p[n:]) > 0 {
 
-		if n+w.chunk <= len(p) {
-			m, err = w.Writer.Write(p[n : n+w.chunk])
+		if chunk <= len(p[n:]) {
+			m, err = w.Write(p[n : n+chunk])
 		} else {
-			m, err = w.Writer.Write(p[n:])
+			m, err = w.Write(p[n:])
 		}
 
 		n += m
