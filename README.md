@@ -1,6 +1,5 @@
-nio
+nio [![GoDoc](https://godoc.org/github.com/djherbis/nio?status.svg)](https://godoc.org/github.com/djherbis/nio) [![Build Status](https://travis-ci.org/djherbis/nio.svg)](https://travis-ci.org/djherbis/nio)
 ==========
-Documentation: http://godoc.org/github.com/djherbis/nio
 
 Usage
 -----
