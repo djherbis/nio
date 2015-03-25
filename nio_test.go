@@ -43,14 +43,13 @@ func TestBigWriteSmallBuf(t *testing.T) {
 		}
 	}()
 
-	data := make([]byte, 24)
-	n, err := r.Read(data)
-	if err != nil && err != io.EOF {
+	output := bytes.NewBuffer(nil)
+	_, err := io.Copy(output, r)
+	if err != nil {
 		t.Error(err.Error())
 	}
-	data = data[:n]
-	if !bytes.Equal(data, []byte("hello world")) {
-		t.Errorf("unexpected output %s", data)
+	if !bytes.Equal(output.Bytes(), []byte("hello world")) {
+		t.Errorf("unexpected output %s", output.Bytes())
 	}
 }
 

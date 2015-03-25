@@ -80,25 +80,21 @@ func (r *bufpipe) Read(p []byte) (n int, err error) {
 	defer r.c.Signal()
 	defer r.l.Unlock()
 
-	for len(p[n:]) > 0 {
-
-		for empty(r.b) {
-			if r.err != nil {
-				return n, r.err
-			}
-
-			r.c.Signal()
-			r.c.Wait()
+	for empty(r.b) {
+		if r.err != nil {
+			return 0, r.err
 		}
 
-		m, err := r.b.Read(p[n:])
-		n += m
-		if err != nil {
-			return n, err
-		}
+		r.c.Signal()
+		r.c.Wait()
 	}
 
-	return n, nil
+	n, err = r.b.Read(p)
+	if err == io.EOF {
+		err = nil
+	}
+
+	return n, err
 }
 
 func (w *bufpipe) Write(p []byte) (n int, err error) {
