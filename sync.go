@@ -80,16 +80,23 @@ func (r *bufpipe) Read(p []byte) (n int, err error) {
 	defer r.c.Signal()
 	defer r.l.Unlock()
 
-	for empty(r.b) {
-		if r.err != nil {
-			return 0, r.err
+	for len(p[n:]) > 0 {
+
+		for empty(r.b) {
+			if r.err != nil {
+				return n, r.err
+			}
+
+			r.c.Signal()
+			r.c.Wait()
 		}
 
-		r.c.Signal()
-		r.c.Wait()
+		m, err := r.b.Read(p[n:])
+		n += m
+		if err != nil {
+			return n, err
+		}
 	}
-
-	n, _ = r.b.Read(p)
 
 	return n, nil
 }

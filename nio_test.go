@@ -27,6 +27,33 @@ func TestCopy(t *testing.T) {
 	}
 }
 
+func TestBigWriteSmallBuf(t *testing.T) {
+	buf := buffer.New(5)
+	r, w := Pipe(buf)
+	defer r.Close()
+
+	go func() {
+		defer w.Close()
+		n, err := w.Write([]byte("hello world"))
+		if err != nil {
+			t.Error(err.Error())
+		}
+		if int(n) != len("hello world") {
+			t.Errorf("wrote wrong # of bytes")
+		}
+	}()
+
+	data := make([]byte, 24)
+	n, err := r.Read(data)
+	if err != nil && err != io.EOF {
+		t.Error(err.Error())
+	}
+	data = data[:n]
+	if !bytes.Equal(data, []byte("hello world")) {
+		t.Errorf("unexpected output %s", data)
+	}
+}
+
 func TestPipeCloseEarly(t *testing.T) {
 	buf := buffer.New(1024)
 	r, w := Pipe(buf)
@@ -51,7 +78,7 @@ func TestPipe(t *testing.T) {
 
 	result := make([]byte, 1024)
 	n, err := r.Read(result)
-	if err != nil {
+	if err != nil && err != io.EOF {
 		t.Error(err.Error())
 		return
 	}
