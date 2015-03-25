@@ -1,5 +1,9 @@
-nio [![GoDoc](https://godoc.org/github.com/djherbis/nio?status.svg)](https://godoc.org/github.com/djherbis/nio) [![Build Status](https://travis-ci.org/djherbis/nio.svg)](https://travis-ci.org/djherbis/nio)
+nio 
 ==========
+
+[![GoDoc](https://godoc.org/github.com/djherbis/nio?status.svg)](https://godoc.org/github.com/djherbis/nio) 
+[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE.txt)
+[![Build Status](https://travis-ci.org/djherbis/nio.svg)](https://travis-ci.org/djherbis/nio)
 
 Usage
 -----
