@@ -64,11 +64,11 @@ func newBufferedPipe(buf Buffer) *bufpipe {
 	return s
 }
 
-func Empty(buf Buffer) bool {
+func empty(buf Buffer) bool {
 	return buf.Len() == 0
 }
 
-func Gap(buf Buffer) int64 {
+func gap(buf Buffer) int64 {
 	return buf.Cap() - buf.Len()
 }
 
@@ -80,7 +80,7 @@ func (r *bufpipe) Read(p []byte) (n int, err error) {
 	defer r.c.Signal()
 	defer r.l.Unlock()
 
-	for Empty(r.b) {
+	for empty(r.b) {
 		if r.err != nil {
 			return 0, r.err
 		}
@@ -112,16 +112,16 @@ func (w *bufpipe) Write(p []byte) (n int, err error) {
 	for len(p[n:]) > 0 {
 
 		// writes too big
-		for Gap(w.b) < int64(len(p[n:])) {
+		for gap(w.b) < int64(len(p[n:])) {
 
 			// wait for space
-			for Gap(w.b) == 0 {
+			for gap(w.b) == 0 {
 				w.c.Signal()
 				w.c.Wait()
 			}
 
 			// chunk write to fill space
-			m, err = w.b.Write(p[n : int64(n)+Gap(w.b)])
+			m, err = w.b.Write(p[n : int64(n)+gap(w.b)])
 			n += m
 			if err != nil {
 				return n, err
