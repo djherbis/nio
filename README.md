@@ -4,6 +4,7 @@ nio
 [![GoDoc](https://godoc.org/github.com/djherbis/nio?status.svg)](https://godoc.org/github.com/djherbis/nio) 
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE.txt)
 [![Build Status](https://travis-ci.org/djherbis/nio.svg)](https://travis-ci.org/djherbis/nio)
+[![Coverage Status](https://coveralls.io/repos/djherbis/nio/badge.svg?branch=master)](https://coveralls.io/r/djherbis/nio?branch=master)
 
 Usage
 -----
