@@ -2,6 +2,7 @@ package nio
 
 import (
 	"bytes"
+	"io"
 	"testing"
 
 	"github.com/djherbis/buffer"
@@ -26,15 +27,27 @@ func TestCopy(t *testing.T) {
 	}
 }
 
+func TestPipeCloseEarly(t *testing.T) {
+	buf := buffer.New(1024)
+	r, w := Pipe(buf)
+	r.Close()
+	_, err := w.Write([]byte("hello world"))
+	if err != io.ErrClosedPipe {
+		t.Errorf("expected closed pipe")
+	}
+}
+
 func TestPipe(t *testing.T) {
 	buf := buffer.New(1024)
 	r, w := Pipe(buf)
+	defer r.Close()
 
 	data := []byte("the quick brown fox jumps over the lazy dog")
 	if _, err := w.Write(data); err != nil {
 		t.Error(err.Error())
 		return
 	}
+	w.Close()
 
 	result := make([]byte, 1024)
 	n, err := r.Read(result)
