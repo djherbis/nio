@@ -3,9 +3,15 @@ package nio
 
 import "io"
 
+// Buffer is used to store bytes.
 type Buffer interface {
+	// Len returns how many bytes are buffered
 	Len() int64
+
+	// Cap returns how many bytes can in the buffer at a time
 	Cap() int64
+
+	// ReadWriter writes are stored in the buffer, reads return the stored data
 	io.ReadWriter
 }
 
@@ -33,6 +39,7 @@ func Copy(dst io.Writer, src io.Reader, buf Buffer) (n int64, err error) {
 	return io.Copy(dst, NewReader(src, buf))
 }
 
+// NewReader reads from the buffer which is concurrently filled with data from the passed src.
 func NewReader(src io.Reader, buf Buffer) io.ReadCloser {
 	r, w := Pipe(buf)
 
