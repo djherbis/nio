@@ -22,10 +22,10 @@ type Buffer interface {
 // Close will complete once pending I/O is done. Buffered data will still be available to Read
 // after the Writer has been closed. Parallel calls to Read, and parallel calls to Write are also safe :
 // the individual calls will be gated sequentially.
-func Pipe(buf Buffer) (r io.ReadCloser, w io.WriteCloser) {
+func Pipe(buf Buffer) (r *PipeReader, w *PipeWriter) {
 	p := newBufferedPipe(buf)
-	r = &bufPipeReader{bufpipe: p}
-	w = &bufPipeWriter{bufpipe: p}
+	r = &PipeReader{bufpipe: p}
+	w = &PipeWriter{bufpipe: p}
 	return r, w
 }
 
@@ -45,7 +45,7 @@ func NewReader(src io.Reader, buf Buffer) io.ReadCloser {
 
 	go func() {
 		_, err := io.Copy(w, src)
-		w.(*bufPipeWriter).CloseWithErr(err)
+		w.CloseWithError(err)
 	}()
 
 	return r
