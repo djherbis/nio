@@ -5,11 +5,11 @@ import (
 	"sync"
 )
 
-type bufPipeReader struct {
+type PipeReader struct {
 	*bufpipe
 }
 
-func (r *bufPipeReader) CloseWithErr(err error) error {
+func (r *PipeReader) CloseWithError(err error) error {
 	if err == nil {
 		err = io.ErrClosedPipe
 	}
@@ -22,15 +22,15 @@ func (r *bufPipeReader) CloseWithErr(err error) error {
 	return nil
 }
 
-func (r *bufPipeReader) Close() error {
-	return r.CloseWithErr(nil)
+func (r *PipeReader) Close() error {
+	return r.CloseWithError(nil)
 }
 
-type bufPipeWriter struct {
+type PipeWriter struct {
 	*bufpipe
 }
 
-func (w *bufPipeWriter) CloseWithErr(err error) error {
+func (w *PipeWriter) CloseWithError(err error) error {
 	if err == nil {
 		err = io.EOF
 	}
@@ -43,8 +43,8 @@ func (w *bufPipeWriter) CloseWithErr(err error) error {
 	return nil
 }
 
-func (w *bufPipeWriter) Close() error {
-	return w.CloseWithErr(nil)
+func (w *PipeWriter) Close() error {
+	return w.CloseWithError(nil)
 }
 
 type bufpipe struct {
@@ -72,24 +72,24 @@ func gap(buf Buffer) int64 {
 	return buf.Cap() - buf.Len()
 }
 
-func (prw *bufpipe) Read(p []byte) (n int, err error) {
-	prw.rl.Lock()
-	defer prw.rl.Unlock()
+func (r *PipeReader) Read(p []byte) (n int, err error) {
+	r.rl.Lock()
+	defer r.rl.Unlock()
 
-	prw.l.Lock()
-	defer prw.c.Signal()
-	defer prw.l.Unlock()
+	r.l.Lock()
+	defer r.c.Signal()
+	defer r.l.Unlock()
 
-	for empty(prw.b) {
-		if prw.err != nil {
-			return 0, prw.err
+	for empty(r.b) {
+		if r.err != nil {
+			return 0, r.err
 		}
 
-		prw.c.Signal()
-		prw.c.Wait()
+		r.c.Signal()
+		r.c.Wait()
 	}
 
-	n, err = prw.b.Read(p)
+	n, err = r.b.Read(p)
 	if err == io.EOF {
 		err = nil
 	}
@@ -97,15 +97,15 @@ func (prw *bufpipe) Read(p []byte) (n int, err error) {
 	return n, err
 }
 
-func (prw *bufpipe) Write(p []byte) (n int, err error) {
-	prw.wl.Lock()
-	defer prw.wl.Unlock()
+func (w *PipeWriter) Write(p []byte) (n int, err error) {
+	w.wl.Lock()
+	defer w.wl.Unlock()
 
-	prw.l.Lock()
-	defer prw.c.Signal()
-	defer prw.l.Unlock()
+	w.l.Lock()
+	defer w.c.Signal()
+	defer w.l.Unlock()
 
-	if prw.err != nil {
+	if w.err != nil {
 		return 0, io.ErrClosedPipe
 	}
 
@@ -115,24 +115,24 @@ func (prw *bufpipe) Write(p []byte) (n int, err error) {
 	for len(p[n:]) > 0 {
 
 		// writes too big
-		for gap(prw.b) < int64(len(p[n:])) {
+		for gap(w.b) < int64(len(p[n:])) {
 
 			// wait for space
-			for gap(prw.b) == 0 {
-				prw.c.Signal()
-				prw.c.Wait()
+			for gap(w.b) == 0 {
+				w.c.Signal()
+				w.c.Wait()
 			}
 
 			// chunk write to fill space
-			m, err = prw.b.Write(p[n : int64(n)+gap(prw.b)])
+			m, err = w.b.Write(p[n : int64(n)+gap(w.b)])
 			n += m
 			if err != nil {
 				return n, err
 			}
 
 			// wait for more space
-			prw.c.Signal()
-			prw.c.Wait()
+			w.c.Signal()
+			w.c.Wait()
 
 		}
 
@@ -142,7 +142,7 @@ func (prw *bufpipe) Write(p []byte) (n int, err error) {
 		}
 
 		// write
-		m, err = prw.b.Write(p[n:])
+		m, err = w.b.Write(p[n:])
 		n += m
 		if err != nil {
 			return n, err
