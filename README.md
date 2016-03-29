@@ -42,7 +42,7 @@ The reader returns with data off the Buffer.
 ```go
 import (
   "gopkg.in/djherbis/buffer.v1"
-  "gopkg.in/djherbis/nio.v1"
+  "gopkg.in/djherbis/nio.v2"
 )
 
 buf := buffer.New(32*1024) // 32KB In memory Buffer
@@ -52,7 +52,7 @@ r, w := nio.Pipe(buf)
 Installation
 ------------
 ```sh
-go get gopkg.in/djherbis/nio.v1
+go get gopkg.in/djherbis/nio.v2
 ```
 
 For some pre-built buffers grab:
