@@ -89,8 +89,8 @@ func (r *PipeReader) Read(p []byte) (n int, err error) {
 	defer r.l.Unlock()
 
 	for empty(r.b) {
-		if CloseWithError != nil {
-			return 0, CloseWithError
+		if r.err != nil {
+			return 0, r.err
 		}
 
 		r.c.Signal()
