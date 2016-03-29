@@ -5,10 +5,12 @@ import (
 	"sync"
 )
 
+// PipeReader is the read half of the pipe.
 type PipeReader struct {
 	*bufpipe
 }
 
+// CloseWithError closes the reader; subsequent writes to the write half of the pipe will return the error err.
 func (r *PipeReader) CloseWithError(err error) error {
 	if err == nil {
 		err = io.ErrClosedPipe
@@ -22,14 +24,18 @@ func (r *PipeReader) CloseWithError(err error) error {
 	return nil
 }
 
+// Close closes the reader; subsequent writes to the write half of the pipe will return the error io.ErrClosedPipe.
 func (r *PipeReader) Close() error {
 	return r.CloseWithError(nil)
 }
 
+// A PipeWriter is the write half of a pipe.
 type PipeWriter struct {
 	*bufpipe
 }
 
+// CloseWithError closes the writer; once the buffer is empty subsequent reads from the read half of the pipe will return 
+// no bytes and the error err, or io.EOF if err is nil. CloseWithError always returns nil.
 func (w *PipeWriter) CloseWithError(err error) error {
 	if err == nil {
 		err = io.EOF
@@ -43,6 +49,8 @@ func (w *PipeWriter) CloseWithError(err error) error {
 	return nil
 }
 
+// Close closes the writer; once the buffer is empty subsequent reads from the read half of the pipe will return 
+// no bytes and io.EOF after all the buffer has been read.
 func (w *PipeWriter) Close() error {
 	return w.CloseWithError(nil)
 }
@@ -81,8 +89,8 @@ func (r *PipeReader) Read(p []byte) (n int, err error) {
 	defer r.l.Unlock()
 
 	for empty(r.b) {
-		if r.err != nil {
-			return 0, r.err
+		if CloseWithError != nil {
+			return 0, CloseWithError
 		}
 
 		r.c.Signal()
