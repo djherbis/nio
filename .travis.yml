@@ -8,16 +8,17 @@ matrix:
     - go: tip
 sudo: false
 before_install:
-  - if [[ $TRAVIS_GO_VERSION != 1.4* ]]; then go get github.com/golang/lint/golint; fi
-  - if [[ $TRAVIS_GO_VERSION == 1.4* ]]; then go get golang.org/x/tools/cmd/vet; fi
-  - go get github.com/axw/gocov/gocov
-  - go get github.com/mattn/goveralls
-  - go get golang.org/x/tools/cmd/cover
+- go get github.com/golang/lint/golint
+- go get github.com/axw/gocov/gocov
+- go get github.com/mattn/goveralls
+- if ! go get code.google.com/p/go.tools/cmd/cover; then go get golang.org/x/tools/cmd/cover;
+  fi
 script:
-  - '[ "${TRAVIS_PULL_REQUEST}" != "false" ] || $HOME/gopath/bin/goveralls -service=travis-ci -repotoken $COVERALLS_TOKEN'
-  - if [[ $TRAVIS_GO_VERSION != 1.4* ]]; then $HOME/gopath/bin/golint ./...; fi
-  - go vet
-  - go test -v ./...
+- '[ "${TRAVIS_PULL_REQUEST}" != "false" ] || $HOME/gopath/bin/goveralls -service=travis-ci || true
+  -repotoken $COVERALLS_TOKEN'
+- "$HOME/gopath/bin/golint ./..."
+- go vet
+- go test -v ./...
 notifications:
   email:
     on_success: never
