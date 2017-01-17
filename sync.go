@@ -131,8 +131,14 @@ func (w *PipeWriter) Write(p []byte) (n int, err error) {
 				w.c.Wait()
 			}
 
-			// chunk write to fill space
-			m, err = w.b.Write(p[n : int64(n)+gap(w.b)])
+			// now that we have the lock, see what the real gap is
+			nn := int64(n) + gap(w.b)
+			if nn > int64(len(p)) {
+				// it's grown enough, just do a standard write
+				break
+			}
+
+			m, err = w.b.Write(p[n:nn])
 			n += m
 			if err != nil {
 				return n, err
