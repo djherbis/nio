@@ -105,7 +105,7 @@ func TestEmpty(t *testing.T) {
 	}
 
 	if n != 3 {
-		t.Errorf("wrote wrong # of bytes %s", n)
+		t.Errorf("wrote wrong # of bytes %d", n)
 	}
 
 	n, err = r.Read(nil)
@@ -115,6 +115,6 @@ func TestEmpty(t *testing.T) {
 	}
 
 	if n != 0 {
-		t.Errorf("wrote wrong # of bytes %s", n)
+		t.Errorf("wrote wrong # of bytes %d", n)
 	}
 }
