@@ -1,9 +1,12 @@
 package nio
 
 import (
+	"bufio"
 	"bytes"
 	"io"
 	"testing"
+
+	"io/ioutil"
 
 	"github.com/djherbis/buffer"
 )
@@ -116,5 +119,34 @@ func TestEmpty(t *testing.T) {
 
 	if n != 0 {
 		t.Errorf("wrote wrong # of bytes %d", n)
+	}
+}
+
+func BenchmarkPipe(b *testing.B) {
+	r, w := Pipe(buffer.New(1024))
+	benchPipe(r, w, b)
+}
+
+func BenchmarkIOPipe(b *testing.B) {
+	r, w := io.Pipe()
+	benchPipe(r, w, b)
+}
+
+func benchPipe(r io.Reader, w io.WriteCloser, b *testing.B) {
+	b.ReportAllocs()
+	f, err := ioutil.TempFile("", "benchPipe")
+	if err != nil {
+		b.Error(err)
+	}
+
+	go func() {
+		defer f.Close()
+		io.Copy(bufio.NewWriter(f), r)
+	}()
+
+	defer w.Close()
+
+	for i := 0; i < b.N; i++ {
+		w.Write([]byte("hello world"))
 	}
 }
