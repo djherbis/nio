@@ -34,7 +34,7 @@ type PipeWriter struct {
 	*bufpipe
 }
 
-// CloseWithError closes the writer; once the buffer is empty subsequent reads from the read half of the pipe will return 
+// CloseWithError closes the writer; once the buffer is empty subsequent reads from the read half of the pipe will return
 // no bytes and the error err, or io.EOF if err is nil. CloseWithError always returns nil.
 func (w *PipeWriter) CloseWithError(err error) error {
 	if err == nil {
@@ -49,7 +49,7 @@ func (w *PipeWriter) CloseWithError(err error) error {
 	return nil
 }
 
-// Close closes the writer; once the buffer is empty subsequent reads from the read half of the pipe will return 
+// Close closes the writer; once the buffer is empty subsequent reads from the read half of the pipe will return
 // no bytes and io.EOF after all the buffer has been read.
 func (w *PipeWriter) Close() error {
 	return w.CloseWithError(nil)
@@ -105,7 +105,12 @@ func (r *PipeReader) Read(p []byte) (n int, err error) {
 	return n, err
 }
 
-func (w *PipeWriter) Write(p []byte) (n int, err error) {
+func (w *PipeWriter) Write(p []byte) (int, error) {
+	var m int
+	var n, space int64
+	var err error
+	sliceLen := int64(len(p))
+
 	w.wl.Lock()
 	defer w.wl.Unlock()
 
@@ -117,51 +122,38 @@ func (w *PipeWriter) Write(p []byte) (n int, err error) {
 		return 0, io.ErrClosedPipe
 	}
 
-	var m int
+	// while there is data to write
+	for writeLen := sliceLen; writeLen > 0; writeLen = sliceLen - n {
 
-	// more data to write
-	for len(p[n:]) > 0 {
-
-		// writes too big
-		for gap(w.b) < int64(len(p[n:])) {
-
-			// wait for space
-			for gap(w.b) == 0 {
-				w.c.Signal()
-				w.c.Wait()
-			}
-
-			// now that we have the lock, see what the real gap is
-			nn := int64(n) + gap(w.b)
-			if nn > int64(len(p)) {
-				// it's grown enough, just do a standard write
-				break
-			}
-
-			m, err = w.b.Write(p[n:nn])
-			n += m
-			if err != nil {
-				return n, err
-			}
-
-			// wait for more space
+		// wait for some buffer space to become available
+		for space = gap(w.b); space == 0; space = gap(w.b) {
 			w.c.Signal()
 			w.c.Wait()
+		}
+		// space > 0, and locked
 
+		var nn int64
+		if space < writeLen {
+			// => writeLen - space > 0
+			// => (sliceLen - n) - space > 0
+			// => sliceLen > n + space
+			// nn is safe to use for p[:nn]
+			nn = n + space
+		} else {
+			nn = sliceLen
 		}
 
-		// check if done
-		if len(p[n:]) == 0 {
-			return n, nil
-		}
-
-		// write
-		m, err = w.b.Write(p[n:])
-		n += m
+		m, err = w.b.Write(p[n:nn])
+		n += int64(m)
 		if err != nil {
-			return n, err
+			return int(n), err
 		}
+
+		// one of two cases has occurred:
+		// 1. done writing -> writeLen == 0
+		// 2. ran out of buffer space -> gap(w.b) == 0
+		// both of these cases are handled at the top of this loop
 	}
 
-	return n, err
+	return int(n), err
 }
