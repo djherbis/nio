@@ -88,3 +88,33 @@ func TestPipe(t *testing.T) {
 	}
 
 }
+
+type badBuffer struct{}
+
+func (badBuffer) Len() int64                  { return 3 }
+func (badBuffer) Cap() int64                  { return 6 }
+func (badBuffer) Write(p []byte) (int, error) { return len(p), nil }
+func (badBuffer) Read(p []byte) (int, error)  { return 0, io.EOF }
+
+func TestEmpty(t *testing.T) {
+	r, w := Pipe(badBuffer{})
+	n, err := w.Write([]byte("any"))
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if n != 3 {
+		t.Errorf("wrote wrong # of bytes %s", n)
+	}
+
+	n, err = r.Read(nil)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if n != 0 {
+		t.Errorf("wrote wrong # of bytes %s", n)
+	}
+}
