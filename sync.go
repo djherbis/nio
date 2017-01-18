@@ -123,7 +123,7 @@ func (w *PipeWriter) Write(p []byte) (int, error) {
 	}
 
 	// while there is data to write
-	for writeLen := sliceLen; writeLen > 0; writeLen = sliceLen - n {
+	for writeLen := sliceLen; writeLen > 0 && err == nil; writeLen = sliceLen - n {
 
 		// wait for some buffer space to become available
 		for space = gap(w.b); space == 0; space = gap(w.b) {
@@ -145,14 +145,12 @@ func (w *PipeWriter) Write(p []byte) (int, error) {
 
 		m, err = w.b.Write(p[n:nn])
 		n += int64(m)
-		if err != nil {
-			return int(n), err
-		}
 
-		// one of two cases has occurred:
+		// one of the following cases has occurred:
 		// 1. done writing -> writeLen == 0
 		// 2. ran out of buffer space -> gap(w.b) == 0
-		// both of these cases are handled at the top of this loop
+		// 3. an error occurred err != nil
+		// all of these cases are handled at the top of this loop
 	}
 
 	return int(n), err
