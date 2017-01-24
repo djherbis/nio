@@ -3,10 +3,13 @@ package nio
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"io"
 	"testing"
 
 	"io/ioutil"
+
+	"time"
 
 	"github.com/djherbis/buffer"
 )
@@ -60,7 +63,13 @@ func TestPipeCloseEarly(t *testing.T) {
 	buf := buffer.New(1024)
 	r, w := Pipe(buf)
 	r.Close()
+
 	_, err := w.Write([]byte("hello world"))
+	if err != io.ErrClosedPipe {
+		t.Errorf("expected closed pipe")
+	}
+
+	_, err = io.Copy(ioutil.Discard, r)
 	if err != io.ErrClosedPipe {
 		t.Errorf("expected closed pipe")
 	}
@@ -89,7 +98,51 @@ func TestPipe(t *testing.T) {
 	if !bytes.Equal(data, result) {
 		t.Errorf("exp [%s]\ngot[%s]", string(data), string(result))
 	}
+}
 
+func TestEarlyCloseWrite(t *testing.T) {
+	buf := buffer.New(1)
+	r, w := Pipe(buf)
+
+	testerr := errors.New("test err")
+
+	w.CloseWithError(testerr)
+
+	_, err := w.Write([]byte("ab")) // too big for buffer
+
+	if err != io.ErrClosedPipe {
+		t.Errorf("expected %s but got %s.", testerr, err)
+	}
+
+	_, err = io.Copy(ioutil.Discard, r)
+	if err != testerr {
+		t.Errorf("expected %s but got %s.", testerr, err)
+	}
+}
+
+func TestUnblockWrite(t *testing.T) {
+	buf := buffer.New(1)
+	r, w := Pipe(buf)
+
+	testerr := errors.New("test err")
+
+	go func() {
+		<-time.After(100 * time.Millisecond)
+		if er := w.CloseWithError(testerr); er != nil {
+			t.Error(er)
+		}
+	}()
+
+	_, err := w.Write([]byte("ab")) // too big for buffer
+
+	if err != io.ErrClosedPipe {
+		t.Errorf("expected %s but got %s.", testerr, err)
+	}
+
+	_, err = io.Copy(ioutil.Discard, r)
+	if err != testerr {
+		t.Errorf("expected %s but got %s.", testerr, err)
+	}
 }
 
 type badBuffer struct{}
