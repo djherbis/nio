@@ -52,7 +52,7 @@ func (w *PipeWriter) CloseWithError(err error) error {
 }
 
 // Close closes the writer; once the buffer is empty subsequent reads from the read half of the pipe will return
-// no bytes and io.EOF after all the buffer has been read.
+// no bytes and io.EOF after all the buffer has been read. CloseWithError always returns nil.
 func (w *PipeWriter) Close() error {
 	return w.CloseWithError(nil)
 }

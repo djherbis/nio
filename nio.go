@@ -19,8 +19,9 @@ type Buffer interface {
 // It can be used to connect code expecting an io.Reader with code expecting an io.Writer.
 // Reads on one end read from the supplied Buffer. Writes write to the supplied Buffer.
 // It is safe to call Read and Write in parallel with each other or with Close.
-// Close will complete once pending I/O is done. Buffered data will still be available to Read
-// after the Writer has been closed. Parallel calls to Read, and parallel calls to Write are also safe :
+// Close will complete once pending I/O is done, and may cancel blocking Read/Writes.
+// Buffered data will still be available to Read after the Writer has been closed.
+// Parallel calls to Read, and parallel calls to Write are also safe :
 // the individual calls will be gated sequentially.
 func Pipe(buf Buffer) (r *PipeReader, w *PipeWriter) {
 	p := newBufferedPipe(buf)
