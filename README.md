@@ -59,3 +59,7 @@ For some pre-built buffers grab:
 ```sh
 go get gopkg.in/djherbis/buffer.v1
 ```
+
+Mentions
+------------
+[GopherCon 2017: Peter Bourgon - Evolutionary Optimization with Go](https://www.youtube.com/watch?v=ha8gdZ27wMo&start=2077&end=2140)
