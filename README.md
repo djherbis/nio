@@ -1,7 +1,7 @@
 nio 
 ==========
 
-[![GoDoc](https://godoc.org/github.com/djherbis/nio?status.svg)](https://godoc.org/github.com/djherbis/nio) 
+[![GoDoc](https://godoc.org/github.com/djherbis/nio?status.svg)](https://godoc.org/github.com/djherbis/nio/v3) 
 [![Release](https://img.shields.io/github/release/djherbis/nio.svg)](https://github.com/djherbis/nio/releases/latest)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE.txt)
 [![Build Status](https://travis-ci.org/djherbis/nio.svg)](https://travis-ci.org/djherbis/nio)
@@ -28,7 +28,7 @@ then from the nio.Buffer to an io.Writer. This way, blocking writes don't slow t
 ```go
 import (
   "github.com/djherbis/buffer"
-  "github.com/djherbis/nio"
+  "github.com/djherbis/nio/v3"
 )
 
 buf := buffer.New(32*1024) // 32KB In memory Buffer
@@ -41,8 +41,8 @@ The reader returns with data off the Buffer.
 
 ```go
 import (
-  "gopkg.in/djherbis/buffer.v1"
-  "gopkg.in/djherbis/nio.v2"
+  "github.com/djherbis/buffer"
+  "github.com/djherbis/nio/v3"
 )
 
 buf := buffer.New(32*1024) // 32KB In memory Buffer
@@ -52,12 +52,12 @@ r, w := nio.Pipe(buf)
 Installation
 ------------
 ```sh
-go get gopkg.in/djherbis/nio.v2
+go get github.com/djherbis/nio/v3
 ```
 
 For some pre-built buffers grab:
 ```sh
-go get gopkg.in/djherbis/buffer.v1
+go get github.com/djherbis/buffer
 ```
 
 Mentions
