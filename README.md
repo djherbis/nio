@@ -4,7 +4,7 @@ nio
 [![GoDoc](https://godoc.org/github.com/djherbis/nio?status.svg)](https://godoc.org/github.com/djherbis/nio/v3) 
 [![Release](https://img.shields.io/github/release/djherbis/nio.svg)](https://github.com/djherbis/nio/releases/latest)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE.txt)
-[![Build Status](https://travis-ci.org/djherbis/nio.svg)](https://travis-ci.org/djherbis/nio)
+[![go test](https://github.com/djherbis/nio/actions/workflows/go-test.yml/badge.svg)](https://github.com/djherbis/nio/actions/workflows/go-test.yml)
 [![Coverage Status](https://coveralls.io/repos/djherbis/nio/badge.svg?branch=master)](https://coveralls.io/r/djherbis/nio?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/djherbis/nio)](https://goreportcard.com/report/github.com/djherbis/nio)
 
