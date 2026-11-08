@@ -135,7 +135,7 @@ func (w *PipeWriter) Write(p []byte) (int, error) {
 	for writeLen := sliceLen; writeLen > 0 && err == nil; writeLen = sliceLen - n {
 
 		// wait for some buffer space to become available (while no errs)
-		for space = gap(w.b); space == 0 && w.rerr == nil && w.werr == nil; space = gap(w.b) {
+		for w.rerr == nil && w.werr == nil && gap(w.b) == 0 {
 			w.rwait.Signal()
 			w.wwait.Wait()
 		}
@@ -149,6 +149,8 @@ func (w *PipeWriter) Write(p []byte) (int, error) {
 			err = io.ErrClosedPipe
 			break
 		}
+
+		space = gap(w.b)
 
 		// space > 0, and locked
 
