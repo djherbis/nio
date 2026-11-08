@@ -37,7 +37,9 @@ func Pipe(buf Buffer) (r *PipeReader, w *PipeWriter) {
 // write to the supplied Buffer. If dst implements ReaderFrom, it is used to read from
 // the supplied Buffer.
 func Copy(dst io.Writer, src io.Reader, buf Buffer) (n int64, err error) {
-	return io.Copy(dst, NewReader(src, buf))
+	r := NewReader(src, buf)
+	defer r.Close()
+	return io.Copy(dst, r)
 }
 
 // NewReader reads from the buffer which is concurrently filled with data from the passed src.
